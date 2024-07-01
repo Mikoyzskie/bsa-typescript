@@ -21,3 +21,11 @@ export interface Result {
     vote_average: number;
     vote_count: number;
 }
+export interface Results {
+    backdrop_path: string;
+    id: number;
+    overview: string;
+    poster_path: string;
+    release_date: Date;
+    title: string;
+}

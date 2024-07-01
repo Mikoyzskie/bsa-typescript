@@ -1,9 +1,9 @@
-import { Result } from '../types';
+import { Results } from '../types';
 
-export function generateHTML(movies: Result[]): string {
+export function generateHTML(movies: Results[]): string {
     return movies
         .map(
-            (movie: Result) => `
+            (movie: Results) => `
 <div class="col-lg-3 col-md-4 col-12 p-2">
     <div class="card shadow-sm">
         <img src="https://image.tmdb.org/t/p/original/${movie.poster_path}" />
