@@ -5,6 +5,11 @@ export interface Movies {
     total_results: number;
 }
 
+export interface SearchMovies {
+    total_pages: number;
+    results: Results[];
+}
+
 export interface Result {
     adult: boolean;
     backdrop_path: string;
