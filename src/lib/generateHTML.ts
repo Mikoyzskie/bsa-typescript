@@ -10,13 +10,14 @@ export function generateHTML(movies: Results[]): string {
         <svg
             xmlns="http://www.w3.org/2000/svg"
             stroke="red"
-            fill="red"
+            fill="#ff000078"
             width="50"
             height="50"
             class="bi bi-heart-fill position-absolute p-2"
             viewBox="0 -2 18 22"
+            id="${movie.id}"
         >
-            <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z" />
+            <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z" id="${movie.id}"/>
         </svg>
         <div class="card-body">
             <p class="card-text truncate">

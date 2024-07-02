@@ -96,6 +96,12 @@ if (popularButton && container && loadButton) {
 
         currentPage = 1;
         loadButton.style.display = 'block';
+
+        const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
+
+        clickableElements.forEach((element: HTMLElement) => {
+            element.addEventListener('click', handleClick);
+        });
     };
 }
 
@@ -106,6 +112,12 @@ if (upcomingButton && container && loadButton) {
 
         currentPage = 2;
         loadButton.style.display = 'block';
+
+        const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
+
+        clickableElements.forEach((element: HTMLElement) => {
+            element.addEventListener('click', handleClick);
+        });
     };
 }
 
@@ -116,6 +128,12 @@ if (topRatedButton && container && loadButton) {
 
         currentPage = 3;
         loadButton.style.display = 'block';
+
+        const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
+
+        clickableElements.forEach((element: HTMLElement) => {
+            element.addEventListener('click', handleClick);
+        });
     };
 }
 
@@ -125,8 +143,8 @@ const searchParamMatch: RegExpMatchArray | null = currentUrl.match(/[\?&]search=
 
 let searchContent = 'Nothing here...';
 
-if (container && loadButton) {
-    if (searchParamMatch && searchParamMatch.length > 0) {
+if (container && loadButton && searchParamMatch) {
+    if (searchParamMatch.length > 0) {
         const encodedSearchParam = searchParamMatch[1];
         const loadSearch: Movies = await searchMovie(searchPage, encodedSearchParam);
         if (loadSearch.results.length > 0) {
@@ -150,8 +168,34 @@ if (container && loadButton) {
                 container.innerHTML = addedHTML;
             }
         });
+
+        const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
+
+        clickableElements.forEach((element: HTMLElement) => {
+            element.addEventListener('click', handleClick);
+        });
     } else {
         container.innerHTML = searchContent;
         loadButton.style.display = 'none';
+    }
+}
+
+function handleClick(event: MouseEvent): void {
+    let target = event.target as HTMLElement;
+
+    // Traverse up the DOM to find the parent with the class 'bi-heart-fill'
+    while (target && !target.classList.contains('bi-heart-fill')) {
+        target = target.parentElement as HTMLElement;
+    }
+
+    if (target) {
+        if (target.getAttribute('fill') === 'red') {
+            target.setAttribute('fill', '#ff000078');
+        } else {
+            target.setAttribute('fill', 'red');
+        }
+
+        const elementId = target.id;
+        console.log('Clicked element ID:', elementId);
     }
 }
