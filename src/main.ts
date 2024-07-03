@@ -4,10 +4,17 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/styles.css';
 
 import { Results, Movies } from './types';
-import { getMovies, searchMovie } from './lib/getMovies';
-import { generateHTML } from './lib/generateHTML';
+import { getMovies, searchMovie, getMovieById } from './lib/getMovies';
+import { generateHTML, generateFavorite } from './lib/generateHTML';
 
 // TODO render your app here
+
+const favorites = localStorage.getItem('favoriteMovies');
+let favoritesArray: string[] = [];
+
+if (favorites) {
+    favoritesArray = JSON.parse(favorites);
+}
 
 let popularPage = 1;
 let upcomingPage = 1;
@@ -25,14 +32,21 @@ if (container) {
     container.innerHTML = containerContent;
 }
 
+function getRandomItem(movie: Results[]): Results {
+    const randomIndex = Math.floor(Math.random() * movie.length);
+    return movie[randomIndex];
+}
+
+let banner = getRandomItem(popular);
+
 const bannerContainer: HTMLElement | null = document.getElementById('random-movie');
 const bannerTitle: HTMLElement | null = document.getElementById('random-movie-name');
 const bannerDescription: HTMLElement | null = document.getElementById('random-movie-description');
 
 if (bannerContainer && bannerTitle && bannerDescription) {
-    bannerTitle.innerText = popular[1].title;
-    bannerDescription.innerText = popular[1].overview;
-    bannerContainer.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${popular[1].backdrop_path})`;
+    bannerTitle.innerText = banner.title;
+    bannerDescription.innerText = banner.overview;
+    bannerContainer.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${banner.backdrop_path})`;
     bannerContainer.style.backgroundPosition = 'center';
     bannerContainer.style.backgroundSize = 'cover';
 }
@@ -44,41 +58,63 @@ const topRatedButton: HTMLElement | null = document.getElementById('top_rated');
 let currentPage = 1;
 const loadButton: HTMLElement | null = document.getElementById('load-more');
 
+// Function to handle load more button click event
 if (loadButton) {
+    // Add click event listener to the load more button
     loadButton.addEventListener('click', async () => {
+        // Check the current page and load more movies accordingly
         if (currentPage === 1) {
+            // Load more popular movies
             popularPage += 1;
-
             const loadedPopular: Results[] = await getMovies(popularPage, 0);
             let addedHTML = generateHTML(loadedPopular);
             addedHTML = containerContent + addedHTML;
             if (container) {
                 container.innerHTML = addedHTML;
             }
-        }
-        if (currentPage === 2) {
+        } else if (currentPage === 2) {
+            // Load more upcoming movies
             upcomingPage += 1;
-
             const loadedUpcoming: Results[] = await getMovies(upcomingPage, 1);
+
+            // Update the banner with a random movie from the loaded upcoming movies
+            banner = getRandomItem(loadedUpcoming);
+            if (bannerContainer && bannerTitle && bannerDescription) {
+                bannerTitle.innerText = banner.title;
+                bannerDescription.innerText = banner.overview;
+                bannerContainer.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${banner.backdrop_path})`;
+                bannerContainer.style.backgroundPosition = 'center';
+                bannerContainer.style.backgroundSize = 'cover';
+            }
+
             let addedHTML = generateHTML(loadedUpcoming);
             addedHTML = containerContent + addedHTML;
             if (container) {
                 container.innerHTML = addedHTML;
             }
-        }
-        if (currentPage === 3) {
+        } else if (currentPage === 3) {
+            // Load more top rated movies
             topRatedPage += 1;
-
             const loadedTopRated: Results[] = await getMovies(topRatedPage, 2);
+
+            // Update the banner with a random movie from the loaded top rated movies
+            banner = getRandomItem(loadedTopRated);
+            if (bannerContainer && bannerTitle && bannerDescription) {
+                bannerTitle.innerText = banner.title;
+                bannerDescription.innerText = banner.overview;
+                bannerContainer.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${banner.backdrop_path})`;
+                bannerContainer.style.backgroundPosition = 'center';
+                bannerContainer.style.backgroundSize = 'cover';
+            }
+
             let addedHTML = generateHTML(loadedTopRated);
             addedHTML = containerContent + addedHTML;
             if (container) {
                 container.innerHTML = addedHTML;
             }
-        }
-        if (currentPage === 4) {
+        } else if (currentPage === 4) {
+            // Load more search results
             searchPage += 1;
-
             const loadedTopRated: Results[] = await getMovies(topRatedPage, 2);
             let addedHTML = generateHTML(loadedTopRated);
             addedHTML = containerContent + addedHTML;
@@ -89,50 +125,71 @@ if (loadButton) {
     });
 }
 
+const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
+
+clickableElements.forEach((element: HTMLElement) => {
+    element.addEventListener('click', handleClick);
+});
+
+/**
+ * Add click event listener to the popular button and load popular movies into the container.
+ * Update the current page to 1 and display the load button.
+ * Add click event listener to the heart icon and bind it to the handleClick function.
+ */
 if (popularButton && container && loadButton) {
     popularButton.onclick = async () => {
         containerContent = generateHTML(popular);
         container.innerHTML = containerContent;
 
-        currentPage = 1;
-        loadButton.style.display = 'block';
+        currentPage = 1; // Set current page to 1
+        loadButton.style.display = 'block'; // Display the load button
 
-        const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
+        const clickableElement: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill'); // Get all heart icons
 
-        clickableElements.forEach((element: HTMLElement) => {
-            element.addEventListener('click', handleClick);
+        clickableElement.forEach((element: HTMLElement) => {
+            element.addEventListener('click', handleClick); // Add click event listener to each heart icon
         });
     };
 }
 
+/**
+ * Add click event listener to the upcoming button and load upcoming movies into the container.
+ * Update the current page to 2 and display the load button.
+ * Add click event listener to the heart icon and bind it to the handleClick function.
+ */
 if (upcomingButton && container && loadButton) {
     upcomingButton.onclick = async () => {
         containerContent = generateHTML(upcoming);
         container.innerHTML = containerContent;
 
-        currentPage = 2;
-        loadButton.style.display = 'block';
+        currentPage = 2; // Set current page to 2
+        loadButton.style.display = 'block'; // Display the load button
 
-        const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
+        const clickableElement: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill'); // Get all heart icons
 
-        clickableElements.forEach((element: HTMLElement) => {
-            element.addEventListener('click', handleClick);
+        clickableElement.forEach((element: HTMLElement) => {
+            element.addEventListener('click', handleClick); // Add click event listener to each heart icon
         });
     };
 }
 
+/**
+ * Add click event listener to the top rated button and load top rated movies into the container.
+ * Update the current page to 3 and display the load button.
+ * Add click event listener to the heart icon and bind it to the handleClick function.
+ */
 if (topRatedButton && container && loadButton) {
     topRatedButton.onclick = async () => {
         containerContent = generateHTML(topRated);
         container.innerHTML = containerContent;
 
-        currentPage = 3;
-        loadButton.style.display = 'block';
+        currentPage = 3; // Set current page to 3
+        loadButton.style.display = 'block'; // Display the load button
 
-        const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
+        const clickableElement: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill'); // Get all heart icons
 
-        clickableElements.forEach((element: HTMLElement) => {
-            element.addEventListener('click', handleClick);
+        clickableElement.forEach((element: HTMLElement) => {
+            element.addEventListener('click', handleClick); // Add click event listener to each heart icon
         });
     };
 }
@@ -168,15 +225,51 @@ if (container && loadButton && searchParamMatch) {
                 container.innerHTML = addedHTML;
             }
         });
-
-        const clickableElements: NodeListOf<HTMLElement> = document.querySelectorAll('.bi-heart-fill');
-
-        clickableElements.forEach((element: HTMLElement) => {
-            element.addEventListener('click', handleClick);
-        });
     } else {
         container.innerHTML = searchContent;
         loadButton.style.display = 'none';
+    }
+}
+
+/**
+ * Generates the HTML for the favorite movies and updates the DOM element with the id 'favorite-movies'.
+ * If there are no favorite movies, the DOM element will be left empty.
+ */
+const favoritesContainer: HTMLElement | null = document.getElementById('favorite-movies');
+
+let favoritesContents: string = '';
+if (favoritesArray.length > 0) {
+    favoritesArray.map(async (favorite: string) => {
+        const movie: Results = await getMovieById(favorite);
+
+        const addHTML: string = generateFavorite(movie);
+        favoritesContents += addHTML;
+        if (favoritesContents && favoritesContainer) {
+            favoritesContainer.innerHTML = favoritesContents;
+        }
+    });
+}
+
+if (favoritesContents && favoritesContainer) {
+    favoritesContainer.innerHTML = favoritesContents;
+}
+
+/**
+ * Generates the HTML for all the favorite movies and updates the DOM element with the id 'favorite-movies'.
+ * If there are no favorite movies, the DOM element will be left empty.
+ */
+function generateFavorites() {
+    if (favoritesArray.length > 0 && favoritesContainer) {
+        favoritesArray.map(async (favorite: string) => {
+            const movie = await getMovieById(favorite);
+
+            const addHTML: string = generateFavorite(movie);
+            favoritesContents += addHTML;
+        });
+
+        if (favoritesContents && favoritesContainer) {
+            favoritesContainer.innerHTML = favoritesContents;
+        }
     }
 }
 
@@ -188,14 +281,25 @@ function handleClick(event: MouseEvent): void {
         target = target.parentElement as HTMLElement;
     }
 
+    // Handle the click event on a heart icon
     if (target) {
+        // If the heart is filled (red), remove it from the favorites list and update local storage
         if (target.getAttribute('fill') === 'red') {
             target.setAttribute('fill', '#ff000078');
-        } else {
-            target.setAttribute('fill', 'red');
+            const elementId = target.id;
+            localStorage.setItem(
+                'favoriteMovies',
+                JSON.stringify(favoritesArray.filter((x) => x !== elementId.toString()))
+            );
         }
-
-        const elementId = target.id;
-        console.log('Clicked element ID:', elementId);
+        // If the heart is empty (transparent), add it to the favorites list and update local storage
+        else {
+            target.setAttribute('fill', 'red');
+            const elementId = target.id;
+            favoritesArray.push(elementId);
+            localStorage.setItem('favoriteMovies', JSON.stringify(favoritesArray));
+        }
     }
+    generateFavorites();
+    window.location.reload();
 }
