@@ -32,6 +32,8 @@ if (container) {
     container.innerHTML = containerContent;
 }
 
+const favoritesContainer: HTMLElement | null = document.getElementById('favorite-movies');
+
 function getRandomItem(movie: Results[]): Results {
     const randomIndex = Math.floor(Math.random() * movie.length);
     return movie[randomIndex];
@@ -77,28 +79,16 @@ if (loadButton) {
             upcomingPage += 1;
             const loadedUpcoming: Results[] = await getMovies(upcomingPage, 1);
 
-            // Update the banner with a random movie from the loaded upcoming movies
-            banner = getRandomItem(loadedUpcoming);
-            if (bannerContainer && bannerTitle && bannerDescription) {
-                bannerTitle.innerText = banner.title;
-                bannerDescription.innerText = banner.overview;
-                bannerContainer.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${banner.backdrop_path})`;
-                bannerContainer.style.backgroundPosition = 'center';
-                bannerContainer.style.backgroundSize = 'cover';
-            }
-
             let addedHTML = generateHTML(loadedUpcoming);
             addedHTML = containerContent + addedHTML;
             if (container) {
                 container.innerHTML = addedHTML;
             }
-        } else if (currentPage === 3) {
-            // Load more top rated movies
-            topRatedPage += 1;
-            const loadedTopRated: Results[] = await getMovies(topRatedPage, 2);
 
-            // Update the banner with a random movie from the loaded top rated movies
-            banner = getRandomItem(loadedTopRated);
+            // Update the banner with a random movie from the loaded upcoming movies
+            banner = getRandomItem(loadedUpcoming);
+            // console.log(banner);
+
             if (bannerContainer && bannerTitle && bannerDescription) {
                 bannerTitle.innerText = banner.title;
                 bannerDescription.innerText = banner.overview;
@@ -106,6 +96,10 @@ if (loadButton) {
                 bannerContainer.style.backgroundPosition = 'center';
                 bannerContainer.style.backgroundSize = 'cover';
             }
+        } else if (currentPage === 3) {
+            // Load more top rated movies
+            topRatedPage += 1;
+            const loadedTopRated: Results[] = await getMovies(topRatedPage, 2);
 
             let addedHTML = generateHTML(loadedTopRated);
             addedHTML = containerContent + addedHTML;
@@ -235,7 +229,6 @@ if (container && loadButton && searchParamMatch) {
  * Generates the HTML for the favorite movies and updates the DOM element with the id 'favorite-movies'.
  * If there are no favorite movies, the DOM element will be left empty.
  */
-const favoritesContainer: HTMLElement | null = document.getElementById('favorite-movies');
 
 let favoritesContents: string = '';
 if (favoritesArray.length > 0) {
@@ -258,22 +251,8 @@ if (favoritesContents && favoritesContainer) {
  * Generates the HTML for all the favorite movies and updates the DOM element with the id 'favorite-movies'.
  * If there are no favorite movies, the DOM element will be left empty.
  */
-function generateFavorites() {
-    if (favoritesArray.length > 0 && favoritesContainer) {
-        favoritesArray.map(async (favorite: string) => {
-            const movie = await getMovieById(favorite);
 
-            const addHTML: string = generateFavorite(movie);
-            favoritesContents += addHTML;
-        });
-
-        if (favoritesContents && favoritesContainer) {
-            favoritesContainer.innerHTML = favoritesContents;
-        }
-    }
-}
-
-function handleClick(event: MouseEvent): void {
+async function handleClick(event: MouseEvent): Promise<void> {
     let target = event.target as HTMLElement;
 
     // Traverse up the DOM to find the parent with the class 'bi-heart-fill'
@@ -287,10 +266,30 @@ function handleClick(event: MouseEvent): void {
         if (target.getAttribute('fill') === 'red') {
             target.setAttribute('fill', '#ff000078');
             const elementId = target.id;
-            localStorage.setItem(
-                'favoriteMovies',
-                JSON.stringify(favoritesArray.filter((x) => x !== elementId.toString()))
-            );
+
+            if (favoritesContainer && favoritesArray.includes(elementId)) {
+                const newArray = favoritesArray.filter((x) => x !== elementId);
+                // console.log(newArray);
+                favoritesArray = newArray;
+                localStorage.setItem('favoriteMovies', JSON.stringify(newArray));
+
+                let favoritesContent: string = '';
+                if (favoritesArray.length > 0) {
+                    favoritesArray.map(async (favorite: string) => {
+                        const movie: Results = await getMovieById(favorite);
+
+                        const addHTML: string = generateFavorite(movie);
+                        favoritesContent += addHTML;
+                        if (favoritesContent && favoritesContainer) {
+                            favoritesContainer.innerHTML = favoritesContent;
+                        }
+                    });
+                } else {
+                    favoritesContainer.innerHTML = '';
+                }
+
+                favoritesContents = favoritesContent;
+            }
         }
         // If the heart is empty (transparent), add it to the favorites list and update local storage
         else {
@@ -298,8 +297,19 @@ function handleClick(event: MouseEvent): void {
             const elementId = target.id;
             favoritesArray.push(elementId);
             localStorage.setItem('favoriteMovies', JSON.stringify(favoritesArray));
+
+            if (favoritesArray.length > 0 && favoritesContainer) {
+                const movie = await getMovieById(elementId);
+
+                const addHTML: string = generateFavorite(movie);
+                favoritesContents += addHTML;
+
+                if (favoritesContents && favoritesContainer) {
+                    favoritesContainer.innerHTML = favoritesContents;
+                }
+            }
         }
     }
-    generateFavorites();
-    window.location.reload();
+    // generateFavorites();
+    // window.location.reload();
 }
